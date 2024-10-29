@@ -15,7 +15,9 @@ from lavis.datasets.builders.video_qa_builder import MSRVTTQABuilder, MSVDQABuil
 from lavis.datasets.builders.retrieval_builder import (
     MSRVTTRetrievalBuilder,
     DiDeMoRetrievalBuilder,
+    PACMSRVTTRetrievalBuilder,
 )
+
 
 from lavis.common.registry import registry
 
@@ -25,6 +27,7 @@ __all__ = [
     "MSRVTTCapBuilder",
     "MSRVTTQABuilder",
     "MSRVTTRetrievalBuilder",
+    'PACMSRVTTRetrievalBuilder',
     "MSVDCapBuilder",
     "MSVDQABuilder",
     "VATEXCapBuilder",

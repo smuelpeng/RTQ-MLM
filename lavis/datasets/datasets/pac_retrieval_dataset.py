@@ -34,7 +34,7 @@ class PACVideoRetrievalDataset(VideoRetrievalDataset):
 
         video = self.vis_processor(vid_obj)
         caption = self.text_processor(ann["caption"])
-        overall_caption = self.text_processor(self.overall_caps[ann["video"]])
+        overall_caption = self.text_processor(self.overall_caps[ann["video"]][0])
         segment_captions = [self.text_processor(
             cap) for cap in self.segment_caps[ann["video"]]]
 

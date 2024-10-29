@@ -42,7 +42,7 @@ model:
   negative_all_rank: False
 
 datasets:
-  msrvtt_retrieval: # name of the dataset builder
+  pac_msrvtt_retrieval: # name of the dataset builder
     vis_processor:
         train:
           name: "blip_post_video_train"

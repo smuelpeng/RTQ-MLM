@@ -34,7 +34,6 @@ class BaseDatasetBuilder:
         else:
             # when called from task.build_dataset()
             self.config = cfg
-
         self.data_type = self.config.data_type
 
         self.vis_processors = {"train": BaseProcessor(), "eval": BaseProcessor()}
