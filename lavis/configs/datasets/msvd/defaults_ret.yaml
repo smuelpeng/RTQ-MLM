@@ -4,7 +4,7 @@
  # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
 datasets:
-  msrvtt_retrieval: # name of the dataset builder
+  msvd_retrieval: # name of the dataset builder
     # data_dir: ${env.data_dir}/datasets
     data_type: videos # [images|videos|features]
 
@@ -13,13 +13,12 @@ datasets:
       annotations:
         train:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/msrvtt/retrieval_train.json
-          # storage: data/msrvtt/txt_db/msrvtt_retrieval/train_1kA.jsonl
-          storage: data/msrvtt/txt_db/msrvtt_retrieval/MSRVTT_train.9k.jsonl          
+          storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/msvd/msvd_ret_train.json
         val:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/msrvtt/retrieval_val.json
-          storage: data/msrvtt/txt_db/msrvtt_retrieval/test.jsonl
+          storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/msvd/msvd_ret_test.json
         test:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/msrvtt/retrieval_test.json
-          storage: data/msrvtt/txt_db/msrvtt_retrieval/test.jsonl
+          storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/msvd/msvd_ret_test.json
       videos:
-        storage: data/msrvtt/vis_db/msrvtt
+        storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/msvd/YouTubeClips

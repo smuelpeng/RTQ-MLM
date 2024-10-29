@@ -4,7 +4,7 @@
  # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
 model:
-  arch: blip_video_post_retrieval
+  arch: pac_blip_video_post_retrieval
   model_type: default
   backbone_arch: rtq
   load_finetuned: False
@@ -42,7 +42,7 @@ model:
   negative_all_rank: False
 
 datasets:
-  msrvtt_retrieval: # name of the dataset builder
+  pac_msrvtt_retrieval: # name of the dataset builder
     vis_processor:
         train:
           name: "blip_post_video_train"
@@ -57,11 +57,8 @@ datasets:
           name: "blip_caption"
         eval:
           name: "blip_caption"
-    overall_cap:
-      storage: data/msrvtt/txt_db/msrvtt_retrieval/overall_cap.jsonl
-    segment_cap:
-      storage: data/msrvtt/txt_db/msrvtt_retrieval/segment_cap.jsonl
-      
+    overall_caption: data/msrvtt/txt_db/msrvtt_retrieval/overall_cap.jsonl
+    segment_captions: data/msrvtt/txt_db/msrvtt_retrieval/segment_cap.jsonl
 
 run:
   task: retrieval

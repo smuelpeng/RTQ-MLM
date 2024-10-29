@@ -13,8 +13,7 @@ datasets:
       annotations:
         train:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/msrvtt/retrieval_train.json
-          # storage: data/msrvtt/txt_db/msrvtt_retrieval/train_1kA.jsonl
-          storage: data/msrvtt/txt_db/msrvtt_retrieval/MSRVTT_train.9k.jsonl          
+          storage: data/msrvtt/txt_db/msrvtt_retrieval/train_1kA.jsonl
         val:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/msrvtt/retrieval_val.json
           storage: data/msrvtt/txt_db/msrvtt_retrieval/test.jsonl

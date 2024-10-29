@@ -55,15 +55,29 @@ class RetrievalTask(BaseTask):
 
         # Images->Text
         ranks = np.zeros(scores_i2t.shape[0])
+        # for index, score in enumerate(scores_i2t):
+        #     inds = np.argsort(score)[::-1]
+        #     # Score
+        #     rank = 1e20
+        #     for i in img2txt[index]:
+        #         tmp = np.where(inds == i)[0][0]
+        #         if tmp < rank:
+        #             rank = tmp
+        #     ranks[index] = rank
+
         for index, score in enumerate(scores_i2t):
             inds = np.argsort(score)[::-1]
             # Score
-            rank = 1e20
-            for i in img2txt[index]:
-                tmp = np.where(inds == i)[0][0]
-                if tmp < rank:
-                    rank = tmp
-            ranks[index] = rank
+            gt_txt_ids = img2txt[index]
+            if isinstance(gt_txt_ids, int):
+                ranks[index] = np.where(inds == gt_txt_ids)[0][0]
+            else:
+                rank = 1e20
+                for i in gt_txt_ids:
+                    tmp = np.where(inds == i)[0][0]
+                    if tmp < rank:
+                        rank = tmp
+                ranks[index] = rank
 
         # Compute metrics
         tr1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)

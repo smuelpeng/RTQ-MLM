@@ -13,13 +13,16 @@ datasets:
       annotations:
         train:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/didemo/retrieval_train.json
-          storage: didemo/annotations/retrieval_train.json
+          # storage: didemo/annotations/retrieval_train.json
+          storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/didemo_data/txt_db/didemo_retrieval/train.new.jsonl
         val:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/didemo/retrieval_val.json
-          storage: didemo/annotations/retrieval_val.json
+          # storage: didemo/annotations/retrieval_val.json
+          storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/didemo_data/txt_db/didemo_retrieval/test.jsonl
         test:
           url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/didemo/retrieval_test.json
-          storage: didemo/annotations/retrieval_test.json
+          # storage: didemo/annotations/retrieval_test.json
+          storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/didemo_data/txt_db/didemo_retrieval/test.jsonl
       videos:
-        storage: didemo/videos
+        storage: /mnt/pfs/users/yuzhipeng/workspace/Video/data/didemo_data/vis_db/didemo
         # storage: /export/share/dongxuli/data/didemo_retrieval/videos

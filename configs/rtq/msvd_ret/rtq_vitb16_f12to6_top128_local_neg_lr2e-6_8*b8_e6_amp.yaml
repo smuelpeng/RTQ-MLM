@@ -42,7 +42,7 @@ model:
   negative_all_rank: False
 
 datasets:
-  msrvtt_retrieval: # name of the dataset builder
+  msvd_retrieval: # name of the dataset builder
     vis_processor:
         train:
           name: "blip_post_video_train"
@@ -57,11 +57,6 @@ datasets:
           name: "blip_caption"
         eval:
           name: "blip_caption"
-    overall_cap:
-      storage: data/msrvtt/txt_db/msrvtt_retrieval/overall_cap.jsonl
-    segment_cap:
-      storage: data/msrvtt/txt_db/msrvtt_retrieval/segment_cap.jsonl
-      
 
 run:
   task: retrieval
@@ -74,7 +69,7 @@ run:
   init_lr: 2e-6
   min_lr: 0
   weight_decay: 0.04
-  max_epoch: 6
+  max_epoch: 20
 
   # dataloading
   num_workers: 8

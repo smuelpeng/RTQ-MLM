@@ -38,6 +38,7 @@ from lavis.models.blip_video_models.blip_video_mc_qa import BlipVideoMcQA
 from lavis.models.blip_video_models.blip_video_qa import BlipVideoQA
 from lavis.models.blip_video_post_models.blip_video_post_caption import BlipVideoPostCaption
 from lavis.models.blip_video_post_models.blip_video_post_retrieval import BlipVideoPostRetrieval
+from lavis.models.blip_video_post_models.pac_blip_video_post_retrieval import PACBlipVideoPostRetrieval
 from lavis.models.blip_video_post_models.blip_video_post_mc_qa import BlipVideoPostMcQA
 from lavis.models.blip_video_post_models.blip_video_post_qa import BlipVideoPostQA
 from lavis.models.blip_video_post_models.blip_video_xpool_retrieval import BlipVideoXpoolRetrieval
@@ -69,6 +70,7 @@ __all__ = [
     "BlipVideoMcQA",
     "BlipVideoQA",
     "BlipVideoPostRetrieval",
+    "PACBlipVideoPostRetrieval",
     "BlipVideoXpoolRetrieval",
     "BlipVideoPostCaption",
     "BlipVideoPostMcQA",
