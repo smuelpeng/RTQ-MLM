@@ -68,19 +68,16 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
         # co attention
         co_attention_cfg = cfg.get("co_attention")
         self.co_attention = Co_attention_block(co_attention_cfg.num_attention_heads,
-                                               co_attention_cfghidden_size,                                               co_attention_cfg.dropout_rate)
+                                               co_attention_cfg.hidden_size,                                               co_attention_cfg.dropout_rate)
 
     @ classmethod
     def from_config(cls, cfg=None):
         # set from_pretrained=True to load weights for 'bert-base-uncased'
         backbone_arch = cfg.get('backbone_arch', 'vit')
         if backbone_arch == 'vit':
-            image_encoder = VisionTransformerEncoderWithPostProcess.from_config(
-                cfg)
+            image_encoder = VisionTransformerEncoderWithPostProcess.from_config(cfg)
         else:
-            image_encoder = registry.get_model_class(
-                backbone_arch).from_config(cfg)
-
+            image_encoder = registry.get_model_class(backbone_arch).from_config(cfg)
         text_encoder = XBertEncoder.from_config(cfg)
 
         if cfg.get("freeze_video", False):
@@ -165,6 +162,12 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
 
     def segment_aware_text_interaction(self, video_outputs, video_atts, seg_caps):
         # get segment level text features
+        assert len(seg_caps) == self.segment_num
+
+        # rearrange the text caps from 3xb to bx3
+        seg_caps = [list(item) for item in zip(*seg_caps)]
+        seg_caps = [item for sublist in seg_caps for item in sublist]
+
         seg_text = self.tokenizer(
             seg_caps,
             padding="max_length",
@@ -172,23 +175,38 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
             max_length=self.max_txt_len,
             return_tensors="pt",
         ).to(video_outputs.device)
+
         seg_text_output = self.text_encoder.forward_text(seg_text)
-        seg_text_embeds = seg_text_output.last_hidden_state
-        seg_text_feat = F.normalize(
-            self.text_proj(seg_text_embeds[:, 0, :]), dim=-1)
-        seg_text_feat = rearrange(
-            seg_text_feat, '(b s) d -> b s d', s=self.segment_num)
-        co_vision_layer_outputs = []
-        for seg_i in range(self.segment_num):
-            num_per_seg = video_outputs.size(1) // self.segment_num
-            vision_layer_output_i, text_layer_output, co_attention_probs = self.co_attention(
-                video_outputs[:, seg_i *
-                              num_per_seg:(seg_i+1)*num_per_seg, :], video_atts,
-                seg_text_embeds[:, seg_i, :],
-                seg_text.attention_mask)
-            co_vision_layer_outputs.append(vision_layer_output_i)
-        video_outputs = torch.cat(co_vision_layer_outputs, dim=1)
-        return video_outputs
+        seg_text_feat = seg_text_output.last_hidden_state
+
+        Bv, Tv, Hv = video_outputs.size()
+
+        video_outputs = rearrange(
+            video_outputs, 'b (p to) h -> (b to) p h', p=197)
+        # 197 is the number of patches + CLS token
+
+        video_outputs = rearrange(
+            video_outputs, '(b s) p h -> b (s p) h', s=video_outputs.size(0) // self.segment_num // Bv)
+        video_atts = video_atts.view(*video_outputs.size()[:-1])
+
+        cross_video_atts = video_atts.reshape(
+            video_atts.shape[0], 1, 1, video_atts.shape[-1])
+
+        cross_text_mask = seg_text.attention_mask.reshape(
+            seg_text.attention_mask.shape[0], 1, 1, seg_text.attention_mask.shape[-1])
+
+        video_outputs = self.co_attention(
+            video_outputs,
+            cross_video_atts,
+            seg_text_feat,
+            cross_text_mask
+        )
+
+        video_outputs = rearrange(video_outputs, 'b (s p) h -> (b s) p h', p=197)
+        video_pooled = reduce(video_outputs[:, 0], '(b s) h -> b h', 'mean', b = Bv)
+        video_outputs = rearrange(video_outputs,
+                                        '(b to) p h -> b (p to) h', b=Bv) # [48, 197, 768] -> [8, 1182, 768]
+        return video_pooled, video_outputs
 
     def forward(self, samples):
         video = samples["video"]
@@ -224,7 +242,8 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
         text_feat = F.normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
 
         # get pac-text features
-        # pac_feats = self.get_text_feat(overall_caption)
+        Bv, Pv, Hv = video_outputs.size()
+
         if "overall_caption" in samples:
             overall_caption = samples["overall_caption"]
             segment_captions = samples["segment_captions"]
@@ -236,10 +255,9 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
 
             text_feat = pac_feat
 
-            video_outputs = self.segment_aware_text_interaction(
+            video_feat, video_outputs = self.segment_aware_text_interaction(
                 video_outputs, video_atts, segment_captions)
-
-            video_feat  = reduce(video_outputs[:,0], '(b to) h -> b h', 'mean', b=B)
+            video_feat = F.normalize(self.vision_proj(video_feat), dim=-1)
 
         # video-text Contrastive Learning
         idx = idx.view(-1, 1)

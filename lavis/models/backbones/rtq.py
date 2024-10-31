@@ -341,7 +341,7 @@ class RTQEncoder(VisionTransformerEncoder):
                                            '(b to) p h -> b p h', 'mean', b=B)
             else:
                 last_hidden_state = rearrange(last_hidden_state,
-                                              '(b to) p h -> b (p to) h', b=B)
+                                              '(b to) p h -> b (p to) h', b=B) # [48, 197, 768] -> [8, 1182, 768]
 
         return x_pooled, last_hidden_state
 
