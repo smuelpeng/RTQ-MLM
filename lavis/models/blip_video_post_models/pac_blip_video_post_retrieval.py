@@ -71,6 +71,7 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
 
         # segment-aware text interaction
         self.segment_num = cfg.get("segment_num", 3)
+        self.HCI_type = cfg.get("HCI_type", "cls_only_co")
 
         # co attention
         co_attention_cfg = cfg.get("co_attention")
@@ -188,35 +189,73 @@ class PACBlipVideoPostRetrieval(BlipVideoRetrieval):
         seg_text_output = self.text_encoder.forward_text(seg_text)
         seg_text_feat = seg_text_output.last_hidden_state
 
-        Bv, Tv, Hv = video_outputs.size()
+        if self.HCI_type in ['dense']:
+            Bv, Tv, Hv = video_outputs.size()
 
-        video_outputs = rearrange(
-            video_outputs, 'b (p to) h -> (b to) p h', p=197)
-        # 197 is the number of patches + CLS token
+            video_outputs = rearrange(
+                video_outputs, 'b (p to) h -> (b to) p h', p=197)
+            # 197 is the number of patches + CLS token
 
-        video_outputs = rearrange(
-            video_outputs, '(b s) p h -> b (s p) h', s=video_outputs.size(0) // self.segment_num // Bv)
-        video_atts = video_atts.view(*video_outputs.size()[:-1])
+            video_outputs = rearrange(
+                video_outputs, '(b s) p h -> b (s p) h', s=video_outputs.size(0) // self.segment_num // Bv)
+            video_atts = video_atts.view(*video_outputs.size()[:-1])
 
-        cross_video_atts = video_atts.reshape(
-            video_atts.shape[0], 1, 1, video_atts.shape[-1])
+            cross_video_atts = video_atts.reshape(
+                video_atts.shape[0], 1, 1, video_atts.shape[-1])
 
-        cross_text_mask = seg_text.attention_mask.reshape(
-            seg_text.attention_mask.shape[0], 1, 1, seg_text.attention_mask.shape[-1])
+            cross_text_mask = seg_text.attention_mask.reshape(
+                seg_text.attention_mask.shape[0], 1, 1, seg_text.attention_mask.shape[-1])
 
-        video_outputs = self.co_attention(
-            video_outputs,
-            cross_video_atts,
-            seg_text_feat,
-            cross_text_mask
-        )
+            video_outputs = self.co_attention(
+                video_outputs,
+                cross_video_atts,
+                seg_text_feat,
+                cross_text_mask
+            )
 
-        video_outputs = rearrange(
-            video_outputs, 'b (s p) h -> (b s) p h', p=197)
-        video_pooled = reduce(
-            video_outputs[:, 0], '(b s) h -> b h', 'mean', b=Bv)
-        video_outputs = rearrange(video_outputs,
-                                  '(b to) p h -> b (p to) h', b=Bv)  # [48, 197, 768] -> [8, 1182, 768]
+            video_outputs = rearrange(
+                video_outputs, 'b (s p) h -> (b s) p h', p=197)
+            video_pooled = reduce(
+                video_outputs[:, 0], '(b s) h -> b h', 'mean', b=Bv)
+            video_outputs = rearrange(video_outputs,
+                                      '(b to) p h -> b (p to) h', b=Bv)  # [48, 197, 768] -> [8, 1182, 768]
+        elif self.HCI_type in ['cls_only_co']:
+            Bv, Tv, Hv = video_outputs.size()
+            video_outputs = rearrange(
+                video_outputs, 'b (p to) h -> (b to) p h', p=197)
+
+            video_cls_feats = video_outputs[:, 0]  # [(b 6), h]
+
+            video_cls_feats = rearrange(video_cls_feats, '(b s) h -> b s h', s=video_cls_feats.size(0) // self.segment_num // Bv)
+        
+            video_atts = torch.ones(video_cls_feats.size()[:-1], dtype=torch.long).to(video_outputs.device)
+            cross_video_atts = video_atts.reshape(
+                video_atts.shape[0], 1, 1, video_atts.shape[-1])
+
+            seg_cls_feats = seg_text_feat[:, 0, :]  # [b, h]
+            seg_cls_feats = rearrange(seg_cls_feats, 'b h -> b 1 h')
+
+            cross_text_mask = torch.ones(seg_cls_feats.size()[:-1], dtype=torch.long).to(video_outputs.device)
+            cross_text_mask = cross_text_mask.reshape(
+                cross_text_mask.shape[0], 1, 1, cross_text_mask.shape[-1])
+                
+            co_video_cls_feats = self.co_attention(
+                video_cls_feats,
+                cross_video_atts,
+                seg_cls_feats,
+                cross_text_mask
+            )
+
+            co_video_cls_feats = rearrange(
+                co_video_cls_feats, 'b s h -> (b s) h')
+            video_pooled = reduce(
+                co_video_cls_feats, '(b s) h -> b h', 'mean', b=Bv)
+            video_outputs = rearrange(video_outputs,
+                                      '(b to) p h -> b (p to) h', b=Bv)
+        elif self.HCI_type in ['cls_only_co_vit']:
+            raise NotImplementedError
+            
+
         return video_pooled, video_outputs
 
     def forward(self, samples):
