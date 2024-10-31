@@ -378,6 +378,12 @@ class RunnerBase:
         if not self.evaluate_only and self.resume_ckpt_path is not None:
             self._load_checkpoint(self.resume_ckpt_path)
 
+
+        # pre evaluation
+        val_log = self.eval_epoch(
+            split_name='val', cur_epoch=0
+        )
+        self.log_stats(val_log, 'val')
         for cur_epoch in range(self.start_epoch, self.max_epoch):
             # training phase
             if not self.evaluate_only:

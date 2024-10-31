@@ -270,7 +270,11 @@ class VideoRetrievalEvalDataset(BaseDataset, __DisplMixin):
                 self.img2txt[img_id].append(txt_id)
                 self.txt2img[txt_id] = img_id
                 txt_id += 1
-                
+
+    def set_video_captions(self, overall_caps, segment_caps):
+        self.overall_caps = overall_caps
+        self.segment_caps = segment_caps
+
     def __getitem__(self, index):
         ann = self.annotation[index]
 
@@ -280,4 +284,14 @@ class VideoRetrievalEvalDataset(BaseDataset, __DisplMixin):
             vid_obj = io.BytesIO(open(self.video_dict[ann["video"]], 'rb').read())
 
         video = self.vis_processor(vid_obj)
-        return {"video": video, "index": index}
+        if hasattr(self, 'overall_caps'):
+            overall_caption = self.text_processor(self.overall_caps[ann["video"]][0])
+            segment_captions = [self.text_processor(cap) for cap in self.segment_caps[ann["video"]]]
+            return {
+                "video": video,
+                "overall_caption": overall_caption,
+                "segment_captions": segment_captions,
+                "index": index
+            }
+        else:
+            return {"video": video, "index": index}

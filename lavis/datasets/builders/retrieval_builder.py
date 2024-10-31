@@ -47,6 +47,8 @@ class PACMSRVTTRetrievalBuilder(BaseDatasetBuilder):
         overall_caps = load_videos(self.config.get("overall_cap"))
         segment_caps = load_videos(self.config.get("segment_cap"))
         datasets["train"].set_video_captions(overall_caps, segment_caps)
+        datasets["val"].set_video_captions(overall_caps, segment_caps)
+        datasets["test"].set_video_captions(overall_caps, segment_caps)
         return datasets
 
 
